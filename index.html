@@ -30,54 +30,52 @@
 <div id="gallery"></div>
 
 <script>
-    // Function to fetch both images and folders from a given path and display them
-    function displayContent(path) {
-        var gallery = document.getElementById('gallery');
+    async function displayContent(path) {
+        try {
+            const response = await fetch(path);
+            const data = await response.text();
 
-        // Use the fetch API to get the content of the folder
-        fetch(path)
-            .then(response => response.text())
-            .then(data => {
-                // Parse the HTML response
-                var parser = new DOMParser();
-                var doc = parser.parseFromString(data, 'text/html');
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(data, 'text/html');
 
-                // Get all the image elements
-                var images = doc.querySelectorAll('a[href$=".jpg"], a[href$=".jpeg"], a[href$=".png"], a[href$=".gif"]');
+            const gallery = document.getElementById('gallery');
+            gallery.innerHTML = ''; // Clear previous content
 
-                // Loop through each image and create a gallery item
-                images.forEach(image => {
-                    var imageUrl = path + image.getAttribute('href');
-                    var galleryItem = document.createElement('div');
+            // Get all links (images and folders)
+            const links = doc.querySelectorAll('a');
+
+            links.forEach(link => {
+                const href = link.getAttribute('href');
+
+                // Check if it's an image
+                if (/\.(jpe?g|png|gif)$/i.test(href)) {
+                    const imageUrl = path + href;
+                    const galleryItem = document.createElement('div');
                     galleryItem.className = 'gallery-item';
-                    var img = document.createElement('img');
+                    const img = document.createElement('img');
                     img.src = imageUrl;
                     galleryItem.appendChild(img);
                     gallery.appendChild(galleryItem);
-                });
+                }
 
-                // Get all the subfolder elements
-                var folders = doc.querySelectorAll('a[href$="/"]');
-                
-                // Loop through each folder and create a gallery folder
-                folders.forEach(folder => {
-                    var folderUrl = path + folder.getAttribute('href');
-                    var galleryFolder = document.createElement('div');
+                // Check if it's a folder
+                else if (href.endsWith('/')) {
+                    const folderUrl = path + href;
+                    const galleryFolder = document.createElement('div');
                     galleryFolder.className = 'gallery-folder';
-                    galleryFolder.textContent = folder.textContent.trim();
+                    galleryFolder.textContent = href.trim();
                     galleryFolder.onclick = function() {
-                        // Clicking on a folder navigates to its content
-                        gallery.innerHTML = ''; // Clear the current content
                         displayContent(folderUrl);
                     };
                     gallery.appendChild(galleryFolder);
-                });
-            })
-            .catch(error => console.error('Error fetching content:', error));
+                }
+            });
+        } catch (error) {
+            console.error('Error fetching content:', error);
+        }
     }
 
-    // Call the function with the path to your main folder
-    displayContent('that1origamikid.github.io/OKWallpapers/wallpapers/');
+    displayContent('path/to/your/main/folder/');
 
 </script>
 
