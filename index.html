@@ -30,16 +30,33 @@
   const repo = 'OKWallpapers';
   const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents`;
 
-  fetch(apiUrl)
-    .then(response => {
-      if (!response.ok) {
-        throw new Error(`Failed to fetch GitHub data: ${response.statusText}`);
-      }
-      return response.json();
-    })
-    .then(data => {
-      const imageFiles = data.filter(file => file.type === 'file' && file.name.match(/\.(jpg|jpeg|png|gif)$/i));
-      const imageUrls = imageFiles.map(file => file.download_url);
+  // Function to recursively fetch images from folders
+  function fetchImagesFromFolder(folderUrl) {
+    return fetch(folderUrl)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`Failed to fetch GitHub data: ${response.statusText}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        const imageFiles = data.filter(file => file.type === 'file' && file.name.match(/\.(jpg|jpeg|png|gif)$/i));
+        const imageUrls = imageFiles.map(file => file.download_url);
+
+        // Recursively fetch images from subfolders
+        const subfolderPromises = data
+          .filter(file => file.type === 'dir')
+          .map(subfolder => fetchImagesFromFolder(subfolder.url));
+
+        return Promise.all([imageUrls, ...subfolderPromises]);
+      })
+      .catch(error => console.error(error));
+  }
+
+  // Fetch images from the root folder of the repository
+  fetchImagesFromFolder(apiUrl)
+    .then(results => {
+      const imageUrls = results.flat(); // Flatten the array of arrays
 
       if (imageUrls.length === 0) {
         throw new Error('No image files found in the repository.');
