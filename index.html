@@ -4,9 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GitHub Photo Carousel</title>
-  <!-- Slick Carousel CSS -->
-  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css"/>
-  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick-theme.css"/>
+  <!-- Flickity CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flickity/2.2.2/flickity.min.css" />
   <style>
     /* Optional: Add custom styles for the carousel container */
     .carousel-container {
@@ -18,12 +17,13 @@
 <body>
 
 <div class="carousel-container">
-  <div id="photo-carousel"></div>
+  <div class="carousel" data-flickity='{ "autoPlay": true, "wrapAround": true }'>
+    <!-- Images will be dynamically added here -->
+  </div>
 </div>
 
-<!-- jQuery and Slick Carousel JS -->
-<script src="jquery.js"></script>
-<script src="slick-carousel.js"></script>
+<!-- Flickity JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flickity/2.2.2/flickity.pkgd.min.js"></script>
 
 <script>
   const username = 'That1OrigamiKid';
@@ -45,27 +45,19 @@
         throw new Error('No image files found in the repository.');
       }
 
-      $('#photo-carousel').slick({
-        slidesToShow: 1,
-        slidesToScroll: 1,
-        autoplay: true,
-        autoplaySpeed: 2000,
-        dots: true,
-        infinite: true,
-        responsive: [
-          {
-            breakpoint: 768,
-            settings: {
-              slidesToShow: 1,
-              slidesToScroll: 1
-            }
-          }
-        ],
-        appendDots: $('.carousel-container'),
-        customPaging: function(slider, i) {
-          return '<img src="' + imageUrls[i] + '" alt="thumbnail">';
-        },
-        slides: imageUrls.map(url => `<div><img src="${url}" alt="GitHub Photo"></div>`)
+      const carouselElement = document.querySelector('.carousel');
+
+      // Add image URLs to the carousel
+      imageUrls.forEach(url => {
+        const imgElement = document.createElement('img');
+        imgElement.src = url;
+        carouselElement.appendChild(imgElement);
+      });
+
+      // Initialize Flickity
+      new Flickity('.carousel', {
+        autoPlay: true,
+        wrapAround: true
       });
     })
     .catch(error => console.error(error));
